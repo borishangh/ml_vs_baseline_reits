@@ -1,0 +1,6 @@
+# Can ML Beat Baseline Models? Forecasting Methods for Indian REITs and Real Estate Equities
+## Abstract 
+Predicting stock prices in markets such as REITs and real estate equities is a popular challenge for time series forecasting methods. The inherent volatility and self-correcting nature of these markets raise fundamental questions about the applicability of statistical learning methods. This study challenges the notion of prediction of stock movement being a time series problem in view of the Efficient Market Hypothesis.
+We compare tree-based models (XGBoost, Random Forests), LSTMs, transformers, and other popular approaches against baseline models and linear regression techniques that fit linear and polynomial curves to past trends. Employing feature engineering and hyperparameter tuning, nonlinear relationships and associated stock trends is learned. Models are evaluated using walk-forward validation on Indian REIT and real estate equity data from 2015-2023. Performance is analyzed using financial metrics (beta, volume, rolling volatility) and fundamental indicators (profit after tax, return on equity, price-earning ratios) with RMSE, MAE, and directional accuracy as key metrics.
+
+*This project was written as a part of Exponentia '25 Paper Presentation, an annual event conducted by the Department of Mathematics, Gargi College, University of Delhi.*
