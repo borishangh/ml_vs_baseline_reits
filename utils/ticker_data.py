@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def get_stock_data(ticker, start=None, end=None, hourly=False):
+def get_stock_data(ticker, start=None, end=None, hourly=False, log_returns = True):
     end_date = datetime.today() if end is None else datetime.strptime(end, "%Y-%m-%d")
     
     if hourly:
@@ -27,11 +27,14 @@ def get_stock_data(ticker, start=None, end=None, hourly=False):
     )
     
     df.columns = df.columns.get_level_values(0)
-    df["logReturns"] = np.log(df.Close / df.Close.shift(1))
-    df = df.dropna()
+    if log_returns:
+        df["logReturns"] = np.log(df.Close / df.Close.shift(1))
+        df = df.dropna()
         
     df = df.reset_index()
-    df = df[['Datetime' if hourly else 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'logReturns']]
+    columns = ['Datetime' if hourly else 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+    if log_returns : columns = columns  + ['logReturns']
+    df = df[columns]
     df.columns.name = None
     
     # if hourly:

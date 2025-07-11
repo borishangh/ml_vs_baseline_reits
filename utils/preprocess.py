@@ -1,5 +1,6 @@
 import ta
 import numpy as np
+import pandas as pd
 
 def prepare_data(df, horizon=1):
     if 'Datetime' not in df:
@@ -15,8 +16,8 @@ def prepare_data(df, horizon=1):
     df['BB_upper'], df['BB_middle'], df['BB_lower'] = ta.volatility.bollinger_hband(df['Close']), ta.volatility.bollinger_mavg(df['Close']), ta.volatility.bollinger_lband(df['Close'])
     df['ATR_14'] = ta.volatility.average_true_range(df['High'], df['Low'], df['Close'], window=14)
     
-    df['DayOfWeek'] = df.index.dayofweek
-    df['Hour'] = df.index.hour
+    df['DayOfWeek'] = pd.to_datetime(df.index).dayofweek
+    df['Hour'] = pd.to_datetime(df.index).hour
     df['Hour_sin'] = np.sin(2 * np.pi * df['Hour']/24)
     df['Hour_cos'] = np.cos(2 * np.pi * df['Hour']/24)
     
