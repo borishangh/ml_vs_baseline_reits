@@ -3,19 +3,39 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def get_stock_data(ticker, start=None, end=None):
-    end = datetime.today() if end is None else datetime.strptime(end, "%Y-%m-%d")
-    start = end - timedelta(days=365) if start is None else datetime.strptime(start, '%Y-%m-%d')
+def get_stock_data(ticker, start=None, end=None, hourly=False):
+    end_date = datetime.today() if end is None else datetime.strptime(end, "%Y-%m-%d")
     
-    df = yf.download(ticker, start=start.strftime('%Y-%m-%d'), end=end.strftime('%Y-%m-%d'))
+    if hourly:
+        default_start = end_date - timedelta(days=60)
+        start_date = default_start if start is None else datetime.strptime(start, '%Y-%m-%d')
+        
+        if (end_date - start_date).days > 730:
+            start_date = end_date - timedelta(days=730)
+            print(f"start date adjusted to {start_date.strftime('%Y-%m-%d')}")
+        
+    else:       
+        default_start = end_date - timedelta(days=365)
+        start_date = default_start if start is None else datetime.strptime(start, '%Y-%m-%d')
+        
+    df = yf.download(
+        tickers=ticker,
+        start=start_date,
+        end=end_date,
+        interval='60m' if hourly else '1d',
+        prepost= True if hourly else False
+    )
     
     df.columns = df.columns.get_level_values(0)
-    df["Returns"] = np.log(df.Close / df.Close.shift(1))
+    df["logReturns"] = np.log(df.Close / df.Close.shift(1))
     df = df.dropna()
-    
+        
     df = df.reset_index()
-    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Returns']]
+    df = df[['Datetime' if hourly else 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'logReturns']]
     df.columns.name = None
+    
+    # if hourly:
+    #     df = df.between_time('09:30', '16:00')
     
     return df
 

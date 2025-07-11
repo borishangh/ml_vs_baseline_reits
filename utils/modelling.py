@@ -34,7 +34,7 @@ def get_jump_params(returns, threshold = 4):
         mu_j, sigma_j = jump_data.mean(), jump_data.std()
     else:
         mu_j, sigma_j = 0, 0.001
-    return (l, mu_j, sigma_j)
+    return (l, mu_j, sigma_j) 
 
 def jump_diffusion(S0, mu, sigma, N, jump_params=None, random_state=None):
     if random_state is not None:
