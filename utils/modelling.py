@@ -10,7 +10,7 @@ def gbm(S0, mu, sigma, N, random_state=None):
     prices = S0 * np.cumprod(returns)
     return prices
 
-def gbm_nl(S0, mu, sigma,N,  normal_weight = 0.7, random_state=None):
+def gbm_nl(S0, mu, sigma,N,  normal_weight = 0.65, random_state=None):
     if random_state is not None:
         np.random.seed(random_state)
     dt = 1/N
@@ -22,7 +22,7 @@ def gbm_nl(S0, mu, sigma,N,  normal_weight = 0.7, random_state=None):
     prices = S0 * np.cumprod(returns)
     return prices
 
-def get_jump_params(returns, threshold = 4):
+def get_jump_params(returns, threshold = 1):
     mu, sigma = returns.mean(), returns.std()
     z = (returns - mu) / sigma
     
@@ -63,3 +63,9 @@ def jump_diffusion(S0, mu, sigma, N, jump_params=None, random_state=None):
     
     prices[1:] = S0 * np.cumprod(total_returns)
     return prices
+
+def get_gbm_params(df):
+    S0, N = df.Close[0], len(df)
+    mu = df.logReturns.mean() * N
+    sigma = df.logReturns.std() * np.sqrt(N)
+    return (S0, mu, sigma, N)
