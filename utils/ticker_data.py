@@ -42,14 +42,18 @@ def get_stock_data(ticker, start=None, end=None, hourly=False, log_returns = Tru
     
     return df
 
-def windowed_dfs(df, size):
-    df = df[["Date", "Close"]]
+def windowed_dfs(df, columns, target, train_window):
+    target_row = df[target].iloc[train_window:].values
+
+    full_windowed = np.array([])
+    for col in columns:
+        df_col = df[col]
+        windowed_col = np.array([df_col.iloc[i:i+train_window].values for i in range(len(df_col) - train_window)])
+        if len(full_windowed) == 0:
+            full_windowed = windowed_col
+        else:
+            full_windowed = np.concatenate((full_windowed, windowed_col), axis=1)
+    column_names = [f"{col.lower()}-{i}" for col in columns for i in range(train_window, 0, -1) ]
+    windowed_df= pd.DataFrame(full_windowed, columns=column_names)
     
-    labels = np.array([f'{i}-days-before' for i in range(size-1, 0, -1)])
-    prices = np.array([df.Close.iloc[i:i+size-1] for i in range(len(df)-size)])
-    X = pd.DataFrame(prices, columns=labels)
-    
-    y = pd.DataFrame(df.iloc[size:]).reset_index()
-    y = y[['Date', 'Close']]
-    
-    return X,y
+    return windowed_df, target_row

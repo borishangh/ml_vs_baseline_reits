@@ -2,34 +2,42 @@ import ta
 import numpy as np
 import pandas as pd
 
-def prepare_data(df, horizon=1):
-    if 'Datetime' not in df:
-        return ValueError('need hourly data')
+def add_indicators(df):
+    if 'Date' in df:
+        df_indicators = df.set_index("Date")
+        df_indicators["DayOfWeek"] = pd.to_datetime(df_indicators.index).dayofweek
+    elif 'Datetime' in df:
+        df_indicators = df.set_index("Datetime")
+        df_indicators["DayOfWeek"] = pd.to_datetime(df_indicators.index).dayofweek
+        df_indicators['Hour'] = pd.to_datetime(df_indicators.index).hour
+        df_indicators['Hour_sin'] = np.sin(2 * np.pi * df_indicators['Hour']/24)
+        df_indicators['Hour_cos'] = np.cos(2 * np.pi * df_indicators['Hour']/24)
+    else:
+        df_indicators = df.copy()
+        
+    df_indicators["RSI5"] = ta.momentum.rsi(df_indicators['Close'], window=5)
+    df_indicators["RSI10"] = ta.momentum.rsi(df_indicators['Close'], window=10)
+    df_indicators['SMA_5'] = ta.trend.sma_indicator(df_indicators['Close'], window=5)
+    df_indicators['SMA_10'] = ta.trend.sma_indicator(df_indicators['Close'], window=10)
+    df_indicators['EMA_10'] = ta.trend.ema_indicator(df_indicators['Close'], window=10)
+
+    df_indicators['MACD'] = ta.trend.macd_diff(df_indicators['Close'])
+    df_indicators['BB_upper'], df_indicators['BB_middle'], df_indicators['BB_lower'] = ta.volatility.bollinger_hband(df_indicators['Close']), ta.volatility.bollinger_mavg(df_indicators['Close']), ta.volatility.bollinger_lband(df_indicators['Close'])
+    # df_indicators['ATR_10'] = ta.volatility.average_true_range(df_indicators['High'], df_indicators['Low'], df_indicators['Close'], window=10)
     
-    df = df.set_index('Datetime')
+    df_indicators = df_indicators.dropna()
     
-    df['Return'] = df['Close'].pct_change()
-    df['Volatility_24h'] = df['Return'].rolling(24).std()
+    return df_indicators
+
+def train_test_split(X, y, dates, test_date='2025-01-01', window_size=14):
+    if isinstance(test_date, str):
+        test_date = pd.to_datetime(test_date)
+    test_start_pos = np.where(dates > test_date)[0][0]
+    train_end_pos = test_start_pos - window_size
     
-    df['RSI_14'] = ta.momentum.rsi(df['Close'], window=14)
-    df['MACD'] = ta.trend.macd_diff(df['Close'])
-    df['BB_upper'], df['BB_middle'], df['BB_lower'] = ta.volatility.bollinger_hband(df['Close']), ta.volatility.bollinger_mavg(df['Close']), ta.volatility.bollinger_lband(df['Close'])
-    df['ATR_14'] = ta.volatility.average_true_range(df['High'], df['Low'], df['Close'], window=14)
+    X_train, y_train = X[:train_end_pos], y[:train_end_pos]
+    X_test, y_test = X[train_end_pos + window_size:], y[train_end_pos + window_size:]
     
-    df['DayOfWeek'] = pd.to_datetime(df.index).dayofweek
-    df['Hour'] = pd.to_datetime(df.index).hour
-    df['Hour_sin'] = np.sin(2 * np.pi * df['Hour']/24)
-    df['Hour_cos'] = np.cos(2 * np.pi * df['Hour']/24)
+    test_dates = dates[train_end_pos + window_size:]
     
-    for lag in [1, 4, 12, 24, 48]:
-        df[f'Return_lag_{lag}'] = df['Return'].shift(lag)
-        df[f'Volume_lag_{lag}'] = df['Volume'].shift(lag)
-    
-    df['Target'] = df['Close'].shift(-horizon)
-    
-    df = df.dropna()
-    
-    features = df.drop(columns=['Target'])
-    target = df['Target']
-    
-    return features, target
+    return X_train, y_train, X_test, y_test, test_dates
