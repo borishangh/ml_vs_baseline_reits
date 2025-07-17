@@ -57,3 +57,22 @@ def windowed_dfs(df, columns, target, train_window):
     windowed_df= pd.DataFrame(full_windowed, columns=column_names)
     
     return windowed_df, target_row
+
+def custom_windowed_dfs(df, column_data, target):
+    max_horizon = max(column_data.values())
+    target_row = df[target].iloc[max_horizon:].values
+
+    full_windowed = np.array([])
+    for col in column_data:
+        df_col = df[col]
+        windowed_col = np.array([df_col.iloc[i-column_data[col]:i].values for i in range(max_horizon, len(df_col))])
+        
+        if len(full_windowed) == 0:
+            full_windowed = windowed_col
+        else:
+            full_windowed = np.concatenate((full_windowed, windowed_col), axis=1)
+
+    column_names = [f"{col.lower()}-{i}" for col in column_data for i in range(column_data[col], 0, -1) ]
+    windowed_df= pd.DataFrame(full_windowed, columns=column_names)
+    
+    return windowed_df, target_row
