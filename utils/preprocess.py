@@ -29,7 +29,12 @@ def add_indicators(df):
     
     return df_indicators
 
-def train_test_split(X, y, dates, test_date='2025-01-01', window_size=14):
+def train_test_split(X, y, dates, test_date=None, window_size=14):
+    if test_date is None:
+        if dates.dtype == np.dtype('<M8[ns]'):
+            test_date = pd.to_datetime('2025-01-01')
+        else:
+            test_date = pd.to_datetime('2025-06-19 00:00:00+00:00')
     if isinstance(test_date, str):
         test_date = pd.to_datetime(test_date)
     test_start_pos = np.where(dates > test_date)[0][0]
